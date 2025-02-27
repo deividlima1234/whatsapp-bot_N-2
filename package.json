@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.3.0",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  },
+  "scripts": {
+    "start": "node scripts/bot.js"
+  }
+}
