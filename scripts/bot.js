@@ -1,5 +1,6 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
+const fs = require('fs');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); // Compatibilidad con Node.js
 
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -12,9 +13,16 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
-client.on('qr', qr => {
-    qrcode.generate(qr, { small: true });
-    console.log("📱 Escanea este QR con tu WhatsApp");
+client.on('qr', async qr => {
+    console.log("📱 Generando QR...");
+
+    try {
+        // Genera la imagen del QR y guárdala en un archivo
+        await qrcode.toFile('qr.png', qr);
+        console.log("✅ QR generado como imagen: qr.png (Descárgala y escanéala)");
+    } catch (error) {
+        console.error("❌ Error al generar el QR:", error);
+    }
 });
 
 client.on('ready', () => {
