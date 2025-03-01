@@ -4,7 +4,7 @@ const fs = require('fs');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); // Compatibilidad con Node.js
 
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const API_KEY = "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"; // Reemplaza con tu clave real
+const API_KEY = "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"; // Reemplaza con tu clave real
 
 const client = new Client({
     puppeteer: {
