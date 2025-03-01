@@ -1,13 +1,16 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); // Compatibilidad con Node.js
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-const API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const API_KEY = "sk-or-v1-954b0807b1d8e32377cf33df347f84e1caa847d1c14a63cb0af08e84a75cfaa53"; // Reemplaza con tu clave real
+const API_URL = process.env.API_URL; 
+const API_KEY = process.env.API_KEY; 
+
+console.log("🔑 API_KEY cargada:", API_KEY ? "Sí" : "No");
+console.log("🌍 API_URL cargada:", API_URL ? "Sí" : "No");  
 
 const client = new Client({
     puppeteer: {
-        args: ["--no-sandbox", "--disable-setuid-sandbox"], // Solución para Puppeteer en Railway
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
     authStrategy: new LocalAuth()
 });
@@ -16,7 +19,7 @@ client.on('qr', async qr => {
     console.log("📱 Escanea este código QR para iniciar sesión:");
     
     try {
-        console.log(await qrcode.toString(qr, { type: 'terminal', small: true })); // Ajusta el tamaño del QR
+        console.log(await qrcode.toString(qr, { type: 'terminal', small: true }));
     } catch (error) {
         console.error("❌ Error al generar el QR en la terminal:", error);
     }
@@ -37,28 +40,31 @@ client.on('message', async message => {
 });
 
 async function obtenerRespuestaIA(mensaje) {
+    if (!API_KEY) {
+        console.error("❌ Error: API_KEY no configurada.");
+        return "⚠️ No tengo acceso a la IA en este momento.";
+    }
+
     try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                model: "google/gemini-2.0-flash-lite-001",
-                messages: [
-                    { role: "system", content: "Eres un trabajador de SERVICIO TÉCNICO MASCHERANITO, un taller de reparación de celulares. Tu trabajo es atender a los clientes de manera amable y profesional. Si un cliente pregunta por su equipo en reparación, pídele el número de orden. Si alguien quiere reparar un celular, pregunta la marca, modelo y el problema que tiene. También puedes dar información sobre nuestros servicios y tiempos de entrega." },
-                    { role: "user", content: mensaje }
+                contents: [
+                    {
+                        role: "user",
+                        parts: [{ text: mensaje }]
+                    }
                 ]
-            })            
+            })
         });
 
         const data = await response.json();
-        console.log("🔍 Respuesta completa de la API:", JSON.stringify(data, null, 2));
+        console.log("🔍 Respuesta completa de Gemini:", JSON.stringify(data, null, 2));
 
-        return data.choices?.[0]?.message?.content || "⚠️ No recibí respuesta.";
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
     } catch (error) {
-        console.error("❌ Error con OpenRouter:", error);
+        console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
     }
 }
