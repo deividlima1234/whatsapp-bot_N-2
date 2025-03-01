@@ -16,7 +16,7 @@ client.on('qr', async qr => {
     console.log("📱 Escanea este código QR para iniciar sesión:");
     
     try {
-        console.log(await qrcode.toString(qr, { type: 'terminal' })); // Muestra el QR en la terminal
+        console.log(await qrcode.toString(qr, { type: 'terminal', small: true })); // Ajusta el tamaño del QR
     } catch (error) {
         console.error("❌ Error al generar el QR en la terminal:", error);
     }
