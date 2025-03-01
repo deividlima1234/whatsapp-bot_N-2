@@ -3,7 +3,7 @@ const qrcode = require('qrcode');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); // Compatibilidad con Node.js
 
 const API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const API_KEY = "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"; // Reemplaza con tu clave real
+const API_KEY = "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"; // Reemplaza con tu clave real
 
 const client = new Client({
     puppeteer: {
