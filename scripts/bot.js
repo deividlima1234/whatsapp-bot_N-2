@@ -52,9 +52,9 @@ async function obtenerRespuestaIA(mensaje) {
             body: JSON.stringify({
                 contents: [
                     { 
-                        role: "system", 
+                        role: "user", 
                         parts: [{ 
-                            text: "Eres un trabajador de SERVICIO TÉCNICO MASCHERANITO, un taller de reparación de celulares. Tu trabajo es atender a los clientes de manera amable y profesional. Si un cliente pregunta por su equipo en reparación, pídele el número de orden. Si alguien quiere reparar un celular, pregunta la marca, modelo y el problema que tiene. También puedes dar información sobre nuestros servicios y tiempos de entrega." 
+                            text: "Eres un trabajador de SERVICIO TÉCNICO MASCHERANITO. Atiende a los clientes de manera amable y profesional. Si preguntan por su equipo en reparación, pide el número de orden. Si quieren reparar un celular, pregunta la marca, modelo y problema. También puedes dar información sobre nuestros servicios y tiempos de entrega."
                         }]
                     },
                     { 
@@ -63,7 +63,7 @@ async function obtenerRespuestaIA(mensaje) {
                     }
                 ]
             })
-        });
+        });    
 
         const data = await response.json();
         console.log("🔍 Respuesta completa de Gemini:", JSON.stringify(data, null, 2));
