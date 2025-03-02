@@ -51,9 +51,15 @@ async function obtenerRespuestaIA(mensaje) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [
-                    {
-                        role: "user",
-                        parts: [{ text: mensaje }]
+                    { 
+                        role: "system", 
+                        parts: [{ 
+                            text: "Eres un trabajador de SERVICIO TÉCNICO MASCHERANITO, un taller de reparación de celulares. Tu trabajo es atender a los clientes de manera amable y profesional. Si un cliente pregunta por su equipo en reparación, pídele el número de orden. Si alguien quiere reparar un celular, pregunta la marca, modelo y el problema que tiene. También puedes dar información sobre nuestros servicios y tiempos de entrega." 
+                        }]
+                    },
+                    { 
+                        role: "user", 
+                        parts: [{ text: mensaje }] 
                     }
                 ]
             })
