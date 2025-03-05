@@ -54,7 +54,7 @@ async function obtenerRespuestaIA(mensaje) {
                     { 
                         role: "user", 
                         parts: [{ 
-                            text: "Eres un trabajador de SERVICIO TÉCNICO MASCHERANITO. Atiende a los clientes de manera amable y profesional. Si preguntan por su equipo en reparación, pide el número de orden. Si quieren reparar un celular, pregunta la marca, modelo y problema. También puedes dar información sobre nuestros servicios y tiempos de entrega."
+                            text: "Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende a los clientes de manera amable y profesional. Identifica si la consulta es una pregunta frecuente, si necesita más información o si debe ser atendida por un humano."
                         }]
                     },
                     { 
@@ -68,11 +68,24 @@ async function obtenerRespuestaIA(mensaje) {
         const data = await response.json();
         console.log("🔍 Respuesta completa de Gemini:", JSON.stringify(data, null, 2));
 
-        return data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
+        let respuestaIA = data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
+        
+        // 🔹 Lógica basada en el diagrama de flujo
+        if (respuestaIA.includes("pregunta frecuente")) {
+            return respuestaIA; // Respuesta automática
+        } else if (respuestaIA.includes("más información")) {
+            return "🔍 Para poder ayudarte mejor, ¿puedes darme más detalles?"; 
+        } else if (respuestaIA.includes("agente humano")) {
+            return "📞 Parece que necesitas ayuda especializada. Te conectaré con un asesor.";
+        }
+
+        return respuestaIA; // Respuesta normal
+
     } catch (error) {
         console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
     }
 }
+
 
 client.initialize();
