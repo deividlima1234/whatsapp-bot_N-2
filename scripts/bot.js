@@ -39,11 +39,16 @@ client.on('message', async message => {
     message.reply(respuestaIA || "⚠️ No entendí tu mensaje, intenta de nuevo.");
 });
 
+const historialConversacion = []; // Almacena el contexto
+
 async function obtenerRespuestaIA(mensaje) {
     if (!API_KEY) {
         console.error("❌ Error: API_KEY no configurada.");
         return "⚠️ No tengo acceso a la IA en este momento.";
     }
+
+    // Agregamos el nuevo mensaje del usuario al historial
+    historialConversacion.push({ role: "user", parts: [{ text: mensaje }] });
 
     try {
         const response = await fetch(`${API_URL}?key=${API_KEY}`, {
@@ -57,10 +62,7 @@ async function obtenerRespuestaIA(mensaje) {
                             text: "Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende a los clientes de manera amable y profesional. Identifica si la consulta es una pregunta frecuente, si necesita más información o si debe ser atendida por un humano."
                         }]
                     },
-                    { 
-                        role: "user", 
-                        parts: [{ text: mensaje }] 
-                    }
+                    ...historialConversacion.slice(-10) // Enviamos los últimos 10 mensajes para contexto
                 ]
             })
         });    
@@ -70,6 +72,9 @@ async function obtenerRespuestaIA(mensaje) {
 
         let respuestaIA = data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
         
+        // Agregamos la respuesta de la IA al historial
+        historialConversacion.push({ role: "assistant", parts: [{ text: respuestaIA }] });
+
         // 🔹 Lógica basada en el diagrama de flujo
         if (respuestaIA.includes("pregunta frecuente")) {
             return respuestaIA; // Respuesta automática
@@ -86,6 +91,7 @@ async function obtenerRespuestaIA(mensaje) {
         return "❌ Error al conectar con la IA.";
     }
 }
+
 
 
 client.initialize();
