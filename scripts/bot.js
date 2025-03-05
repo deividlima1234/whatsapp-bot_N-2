@@ -68,13 +68,13 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
             body: JSON.stringify({
                 contents: [
                     { 
-                        role: "system", 
                         parts: [{ 
-                            text: `Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende SOLO a este usuario con ID: ${usuarioID}. No mezcles información de otras conversaciones.` 
+                            text: `Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende solo a este usuario con ID: ${usuarioID}. No mezcles información de otras conversaciones.` 
                         }]
                     },
-                    ...conversaciones[usuarioID] // Enviar solo el historial del usuario actual
+                    ...conversaciones[usuarioID]
                 ]
+                
             })
         });
 
