@@ -1,9 +1,14 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fetch = require('node-fetch'); // Ajustado para CommonJS
 
 const API_URL = process.env.API_URL; 
 const API_KEY = process.env.API_KEY; 
+
+if (!API_KEY || !API_URL) {
+    console.error("❌ ERROR: API_KEY o API_URL no están configuradas en las variables de entorno.");
+    process.exit(1);
+}
 
 console.log("🔑 API_KEY cargada:", API_KEY ? "Sí" : "No");
 console.log("🌍 API_URL cargada:", API_URL ? "Sí" : "No");  
@@ -32,7 +37,7 @@ client.on('ready', () => {
 client.on('message', async message => {
     console.log(`📩 Mensaje recibido: ${message.body}`);
     
-    let respuestaIA = await obtenerRespuestaIA(message.body);
+    let respuestaIA = await obtenerRespuestaIA(message.body, message.from); // 🔧 Corregido
     
     console.log(`🤖 Respuesta de IA: ${respuestaIA}`);
     
@@ -74,8 +79,7 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
                         }]
                     },
                     ...conversaciones[usuarioID]
-                ]                                
-                
+                ]                                  
             })
         });
 
@@ -94,8 +98,5 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
         return "❌ Error al conectar con la IA.";
     }
 }
-
-
-
 
 client.initialize();
