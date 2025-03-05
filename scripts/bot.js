@@ -39,16 +39,21 @@ client.on('message', async message => {
     message.reply(respuestaIA || "⚠️ No entendí tu mensaje, intenta de nuevo.");
 });
 
-const historialConversacion = []; // Almacena el contexto
+const conversaciones = {}; // Objeto para manejar sesiones de cada usuario
 
-async function obtenerRespuestaIA(mensaje) {
+async function obtenerRespuestaIA(mensaje, usuarioID) {
     if (!API_KEY) {
         console.error("❌ Error: API_KEY no configurada.");
         return "⚠️ No tengo acceso a la IA en este momento.";
     }
 
+    // Inicializamos el historial del usuario si no existe
+    if (!conversaciones[usuarioID]) {
+        conversaciones[usuarioID] = [];
+    }
+
     // Agregamos el nuevo mensaje del usuario al historial
-    historialConversacion.push({ role: "user", parts: [{ text: mensaje }] });
+    conversaciones[usuarioID].push({ role: "user", parts: [{ text: mensaje }] });
 
     try {
         const response = await fetch(`${API_URL}?key=${API_KEY}`, {
@@ -62,18 +67,18 @@ async function obtenerRespuestaIA(mensaje) {
                             text: "Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende a los clientes de manera amable y profesional. Identifica si la consulta es una pregunta frecuente, si necesita más información o si debe ser atendida por un humano."
                         }]
                     },
-                    ...historialConversacion.slice(-10) // Enviamos los últimos 10 mensajes para contexto
+                    ...conversaciones[usuarioID].slice(-10) // Últimos 10 mensajes del usuario
                 ]
             })
-        });    
+        });
 
         const data = await response.json();
         console.log("🔍 Respuesta completa de Gemini:", JSON.stringify(data, null, 2));
 
         let respuestaIA = data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
-        
-        // Agregamos la respuesta de la IA al historial
-        historialConversacion.push({ role: "assistant", parts: [{ text: respuestaIA }] });
+
+        // Agregamos la respuesta de la IA al historial del usuario
+        conversaciones[usuarioID].push({ role: "assistant", parts: [{ text: respuestaIA }] });
 
         // 🔹 Lógica basada en el diagrama de flujo
         if (respuestaIA.includes("pregunta frecuente")) {
