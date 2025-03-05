@@ -40,6 +40,7 @@ client.on('message', async message => {
 });
 
 const conversaciones = {}; // Objeto para manejar sesiones de cada usuario
+const MAX_HISTORIAL = 10; // Limita a los últimos 10 mensajes
 
 async function obtenerRespuestaIA(mensaje, usuarioID) {
     if (!API_KEY) {
@@ -47,13 +48,18 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
         return "⚠️ No tengo acceso a la IA en este momento.";
     }
 
-    // Inicializamos el historial del usuario si no existe
+    // Si el usuario no tiene historial, inicializarlo
     if (!conversaciones[usuarioID]) {
         conversaciones[usuarioID] = [];
     }
 
-    // Agregamos el nuevo mensaje del usuario al historial
+    // Guardamos el mensaje del usuario en su historial
     conversaciones[usuarioID].push({ role: "user", parts: [{ text: mensaje }] });
+
+    // Limitar la cantidad de mensajes almacenados
+    if (conversaciones[usuarioID].length > MAX_HISTORIAL) {
+        conversaciones[usuarioID] = conversaciones[usuarioID].slice(-MAX_HISTORIAL);
+    }
 
     try {
         const response = await fetch(`${API_URL}?key=${API_KEY}`, {
@@ -62,40 +68,32 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
             body: JSON.stringify({
                 contents: [
                     { 
-                        role: "user", 
+                        role: "system", 
                         parts: [{ 
-                            text: "Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende a los clientes de manera amable y profesional. Identifica si la consulta es una pregunta frecuente, si necesita más información o si debe ser atendida por un humano."
+                            text: `Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende SOLO a este usuario con ID: ${usuarioID}. No mezcles información de otras conversaciones.` 
                         }]
                     },
-                    ...conversaciones[usuarioID].slice(-10) // Últimos 10 mensajes del usuario
+                    ...conversaciones[usuarioID] // Enviar solo el historial del usuario actual
                 ]
             })
         });
 
         const data = await response.json();
-        console.log("🔍 Respuesta completa de Gemini:", JSON.stringify(data, null, 2));
+        console.log(`🔍 Respuesta para usuario ${usuarioID}:`, JSON.stringify(data, null, 2));
 
         let respuestaIA = data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        // Agregamos la respuesta de la IA al historial del usuario
+        // Guardamos la respuesta de la IA en el historial del usuario
         conversaciones[usuarioID].push({ role: "assistant", parts: [{ text: respuestaIA }] });
 
-        // 🔹 Lógica basada en el diagrama de flujo
-        if (respuestaIA.includes("pregunta frecuente")) {
-            return respuestaIA; // Respuesta automática
-        } else if (respuestaIA.includes("más información")) {
-            return "🔍 Para poder ayudarte mejor, ¿puedes darme más detalles?"; 
-        } else if (respuestaIA.includes("agente humano")) {
-            return "📞 Parece que necesitas ayuda especializada. Te conectaré con un asesor.";
-        }
-
-        return respuestaIA; // Respuesta normal
+        return respuestaIA; 
 
     } catch (error) {
-        console.error("❌ Error con Google Gemini:", error);
+        console.error(`❌ Error con Google Gemini para usuario ${usuarioID}:`, error);
         return "❌ Error al conectar con la IA.";
     }
 }
+
 
 
 
