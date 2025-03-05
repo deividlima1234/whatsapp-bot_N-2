@@ -68,12 +68,13 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
             body: JSON.stringify({
                 contents: [
                     { 
+                        role: "user",  // Se debe definir un rol válido
                         parts: [{ 
                             text: `Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende solo a este usuario con ID: ${usuarioID}. No mezcles información de otras conversaciones.` 
                         }]
                     },
                     ...conversaciones[usuarioID]
-                ]
+                ]                                
                 
             })
         });
