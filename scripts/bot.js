@@ -8,21 +8,25 @@ const API_URL = process.env.API_URL;
 const API_KEY = process.env.API_KEY;
 
 // Configuración de conexión a MySQL (Railway)
+const mysql = require('mysql2/promise');
+
 async function conectarDB() {
-    return await mysql.createConnection({
-        host: process.env.MYSQLHOST,  
-        user: process.env.MYSQLUSER,
-        password: process.env.MYSQLPASSWORD,
-        database: process.env.MYSQLDATABASE,
-        port: process.env.MYSQLPORT
-    });
+    try {
+        const connection = await mysql.createConnection({
+            host: process.env.RAILWAY_TCP_PROXY_DOMAIN, 
+            user: process.env.MYSQLUSER,
+            password: process.env.MYSQLPASSWORD,
+            database: process.env.MYSQLDATABASE,
+            port: process.env.RAILWAY_TCP_PROXY_PORT // Usa el proxy si es necesario
+        });
+
+        console.log("✅ Conexión a MySQL establecida.");
+        return connection;
+    } catch (error) {
+        console.error("❌ Error de conexión a MySQL:", error);
+        process.exit(1);
+    }
 }
-
-(async () => {
-    const connection = await conectarDB();
-    console.log("✅ Conexión a MySQL establecida.");
-})();
-
 
 
 // Verificar API
