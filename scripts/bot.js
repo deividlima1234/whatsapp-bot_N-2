@@ -1,10 +1,21 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
+const mysql = require('mysql2/promise');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); // Importación dinámica
 
-const API_URL = process.env.API_URL; 
-const API_KEY = process.env.API_KEY; 
+// Variables de entorno
+const API_URL = process.env.API_URL;
+const API_KEY = process.env.API_KEY;
 
+// Configuración de conexión a MySQL (Railway)
+const dbConfig = {
+    host: process.env.DB_HOST, 
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+};
+
+// Verificar API
 if (!API_KEY || !API_URL) {
     console.error("❌ ERROR: API_KEY o API_URL no están configuradas en las variables de entorno.");
     process.exit(1);
@@ -13,6 +24,7 @@ if (!API_KEY || !API_URL) {
 console.log("🔑 API_KEY cargada:", API_KEY ? "Sí" : "No");
 console.log("🌍 API_URL cargada:", API_URL ? "Sí" : "No");  
 
+// Inicializar cliente de WhatsApp
 const client = new Client({
     puppeteer: {
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -20,9 +32,22 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
+// Obtener datos de la empresa desde MySQL
+async function obtenerDatosEmpresa() {
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute("SELECT * FROM datos_empresa LIMIT 1");
+        await connection.end();
+
+        return rows.length ? rows[0] : null;
+    } catch (error) {
+        console.error("❌ Error al obtener datos de la empresa:", error);
+        return null;
+    }
+}
+
 client.on('qr', async qr => {
     console.log("📱 Escanea este código QR para iniciar sesión:");
-    
     try {
         console.log(await qrcode.toString(qr, { type: 'terminal', small: true }));
     } catch (error) {
@@ -36,16 +61,16 @@ client.on('ready', () => {
 
 client.on('message', async message => {
     console.log(`📩 Mensaje recibido: ${message.body}`);
-    
-    let respuestaIA = await obtenerRespuestaIA(message.body, message.from); // 🔧 Corregido
+
+    let respuestaIA = await obtenerRespuestaIA(message.body, message.from); 
     
     console.log(`🤖 Respuesta de IA: ${respuestaIA}`);
     
     message.reply(respuestaIA || "⚠️ No entendí tu mensaje, intenta de nuevo.");
 });
 
-const conversaciones = {}; // Objeto para manejar sesiones de cada usuario
-const MAX_HISTORIAL = 10; // Limita a los últimos 10 mensajes
+const conversaciones = {}; // Historial de usuarios
+const MAX_HISTORIAL = 10; // Últimos 10 mensajes
 
 async function obtenerRespuestaIA(mensaje, usuarioID) {
     if (!API_KEY) {
@@ -53,15 +78,20 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
         return "⚠️ No tengo acceso a la IA en este momento.";
     }
 
-    // Si el usuario no tiene historial, inicializarlo
+    // Obtener información de la empresa
+    const datosEmpresa = await obtenerDatosEmpresa();
+    if (!datosEmpresa) {
+        return "⚠️ No se pudo recuperar la información de la empresa.";
+    }
+
+    const { nombre, horario_atencion, soporte_tecnico, whatsapp, billeteras_pago, cuenta_bancaria } = datosEmpresa;
+
     if (!conversaciones[usuarioID]) {
         conversaciones[usuarioID] = [];
     }
 
-    // Guardamos el mensaje del usuario en su historial
     conversaciones[usuarioID].push({ role: "user", parts: [{ text: mensaje }] });
 
-    // Limitar la cantidad de mensajes almacenados
     if (conversaciones[usuarioID].length > MAX_HISTORIAL) {
         conversaciones[usuarioID] = conversaciones[usuarioID].slice(-MAX_HISTORIAL);
     }
@@ -73,9 +103,16 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
             body: JSON.stringify({
                 contents: [
                     { 
-                        role: "user",  // Se debe definir un rol válido
+                        role: "system",
                         parts: [{ 
-                            text: `Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende solo a este usuario con ID: ${usuarioID}. No mezcles información de otras conversaciones.` 
+                            text: `Eres un asistente de atención al cliente de la empresa *${nombre}*. 
+                            - Horario de atención: ${horario_atencion}
+                            - Soporte técnico: ${soporte_tecnico}
+                            - WhatsApp: ${whatsapp}
+                            - Métodos de pago: ${billeteras_pago}
+                            - Cuenta bancaria: ${cuenta_bancaria}
+                            
+                            Atiende solo a este usuario con ID: ${usuarioID}.`
                         }]
                     },
                     ...conversaciones[usuarioID]
@@ -88,7 +125,6 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
 
         let respuestaIA = data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        // Guardamos la respuesta de la IA en el historial del usuario
         conversaciones[usuarioID].push({ role: "assistant", parts: [{ text: respuestaIA }] });
 
         return respuestaIA; 
