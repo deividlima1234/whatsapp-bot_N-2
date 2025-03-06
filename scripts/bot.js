@@ -8,13 +8,16 @@ const API_URL = process.env.API_URL;
 const API_KEY = process.env.API_KEY;
 
 // Configuración de conexión a MySQL (Railway)
-const dbConfig = {
-    host: process.env.MYSQLHOST, 
+const mysql = require('mysql2/promise');
+
+const connection = await mysql.createConnection({
+    host: process.env.MYSQLHOST,  // ✅ Ahora usa la variable de Railway
     user: process.env.MYSQLUSER,
     password: process.env.MYSQLPASSWORD,
     database: process.env.MYSQLDATABASE,
     port: process.env.MYSQLPORT
-};
+});
+
 
 
 // Verificar API
