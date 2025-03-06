@@ -7,17 +7,17 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const API_URL = process.env.API_URL;
 const API_KEY = process.env.API_KEY;
 
-// Configuración de conexión a MySQL (Railway)
+const dbConfig = {
+    host: process.env.RAILWAY_TCP_PROXY_DOMAIN, 
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.RAILWAY_TCP_PROXY_PORT
+};
+
 async function conectarDB() {
     try {
-        const connection = await mysql.createConnection({
-            host: process.env.RAILWAY_TCP_PROXY_DOMAIN, 
-            user: process.env.MYSQLUSER,
-            password: process.env.MYSQLPASSWORD,
-            database: process.env.MYSQLDATABASE,
-            port: process.env.RAILWAY_TCP_PROXY_PORT // Usa el proxy si es necesario
-        });
-
+        const connection = await mysql.createConnection(dbConfig);
         console.log("✅ Conexión a MySQL establecida.");
         return connection;
     } catch (error) {
