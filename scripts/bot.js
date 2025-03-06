@@ -8,11 +8,11 @@ const API_URL = process.env.API_URL;
 const API_KEY = process.env.API_KEY;
 
 const dbConfig = {
-    host: process.env.RAILWAY_TCP_PROXY_DOMAIN, 
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE,
-    port: process.env.RAILWAY_TCP_PROXY_PORT
+    host: "mysql.railway.internal", // Host interno de Railway
+    user: process.env.MYSQLUSER || "root",
+    password: process.env.MYSQLPASSWORD || "neZlNDDRSvpYpEFOOqBlIHmTkTOVeaNW",
+    database: process.env.MYSQLDATABASE || "railway",
+    port: process.env.MYSQLPORT || 3306
 };
 
 async function conectarDB() {
@@ -25,6 +25,10 @@ async function conectarDB() {
         process.exit(1);
     }
 }
+
+// Para probar la conexión
+conectarDB();
+
 
 
 // Verificar API
