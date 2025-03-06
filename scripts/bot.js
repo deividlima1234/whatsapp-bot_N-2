@@ -29,10 +29,12 @@ console.log("🌍 API_URL cargada:", API_URL ? "Sí" : "No");
 // Inicializar cliente de WhatsApp
 const client = new Client({
     puppeteer: {
+        headless: true, // Asegura que se ejecute sin interfaz gráfica
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
     authStrategy: new LocalAuth()
 });
+
 
 // Obtener datos de la empresa desde MySQL
 async function obtenerDatosEmpresa() {
