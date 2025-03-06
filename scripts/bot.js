@@ -8,8 +8,6 @@ const API_URL = process.env.API_URL;
 const API_KEY = process.env.API_KEY;
 
 // Configuración de conexión a MySQL (Railway)
-const mysql = require('mysql2/promise');
-
 async function conectarDB() {
     try {
         const connection = await mysql.createConnection({
