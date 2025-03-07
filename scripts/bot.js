@@ -11,18 +11,18 @@ if (!API_KEY || !API_URL) {
 }
 
 console.log("🔑 API_KEY cargada:", API_KEY ? "Sí" : "No");
-console.log("🌍 API_URL cargada:", API_URL ? "Sí" : "No");  
+console.log("🌍 API_URL cargada:", API_URL ? "Sí" : "No");
+
+// Historial de mensajes por chat
+const historialChats = {};
 
 const client = new Client({
-    puppeteer: {
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    },
+    puppeteer: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
     authStrategy: new LocalAuth()
 });
 
 client.on('qr', async qr => {
     console.log("📱 Escanea este código QR para iniciar sesión:");
-    
     try {
         console.log(await qrcode.toString(qr, { type: 'terminal', small: true }));
     } catch (error) {
@@ -35,64 +35,68 @@ client.on('ready', () => {
 });
 
 client.on('message', async message => {
-    console.log(`📩 Mensaje recibido: ${message.body}`);
+    console.log(`📩 Mensaje recibido de ${message.from}: ${message.body}`);
+
+    // Obtener información del contacto
+    const contact = await message.getContact();
+    const nombreContacto = contact.pushname || contact.name || message._data.notifyName || null;
+
+    // Mantener historial de mensajes
+    if (!historialChats[message.from]) {
+        historialChats[message.from] = [];
+    }
+    historialChats[message.from].push(message.body);
+    if (historialChats[message.from].length > 10) {
+        historialChats[message.from].shift();
+    }
+
+    // Obtener respuesta de la IA
+    let respuestaIA = await obtenerRespuestaIA(message.from, nombreContacto);
     
-    let respuestaIA = await obtenerRespuestaIA(message.body, message.from); 
+    console.log(`🤖 Respuesta de Eddam: ${respuestaIA}`);
     
-    console.log(`🤖 Respuesta de IA: ${respuestaIA}`);
-    
-    message.reply(respuestaIA || "⚠️ No entendí tu mensaje, intenta de nuevo.");
+    message.reply(respuestaIA || "⚠️ No entendí, dime de otra forma.");
 });
 
-const conversaciones = {}; 
-const MAX_HISTORIAL = 10;
 
-async function obtenerRespuestaIA(mensaje, usuarioID) {
+
+async function obtenerRespuestaIA(chatId, nombreContacto) {
     if (!API_KEY) {
         console.error("❌ Error: API_KEY no configurada.");
         return "⚠️ No tengo acceso a la IA en este momento.";
     }
 
-    if (!conversaciones[usuarioID]) {
-        conversaciones[usuarioID] = [];
-    }
-
-    conversaciones[usuarioID].push({ role: "user", parts: [{ text: mensaje }] });
-
-    if (conversaciones[usuarioID].length > MAX_HISTORIAL) {
-        conversaciones[usuarioID] = conversaciones[usuarioID].slice(-MAX_HISTORIAL);
-    }
-
     try {
+        const historial = historialChats[chatId] || [];
+
+        // Personalizar la instrucción con el nombre del contacto si está disponible
+        let saludo = nombreContacto ? `Saluda a la persona usando su nombre (${nombreContacto}) si es posible. ` : "";
+        const prompt = `${saludo}Responde como un hombre llamado Eddam. Habla de manera natural y breve, sin sonar robótico. Usa expresiones humanas y relajadas. No menciones que eres una IA. Si te preguntan '¿Quién eres?' o '¿Cómo te llamas?', responde simplemente 'Soy Eddam'.`;
+
+        // Formatear los mensajes con la instrucción inicial
+        const mensajesIA = [{ role: "user", parts: [{ text: prompt }] }]
+            .concat(historial.map(msg => ({ role: "user", parts: [{ text: msg }] })));
+
         const response = await fetch(`${API_URL}?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [
-                    { 
-                        role: "user",  
-                        parts: [{ 
-                            text: `Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende solo a este usuario con ID: ${usuarioID}. No mezcles información de otras conversaciones.` 
-                        }]
-                    },
-                    ...conversaciones[usuarioID]
-                ]                                  
-            })
+            body: JSON.stringify({ contents: mensajesIA })
         });
 
         const data = await response.json();
-        console.log(`🔍 Respuesta para usuario ${usuarioID}:`, JSON.stringify(data, null, 2));
+        console.log("🔍 Respuesta completa de Gemini:", JSON.stringify(data, null, 2));
 
-        let respuestaIA = data.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
+        // Extraer la respuesta y limitar su longitud
+        let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        conversaciones[usuarioID].push({ role: "assistant", parts: [{ text: respuestaIA }] });
-
-        return respuestaIA; 
-
+        // Limitar a 200 caracteres
+        return respuesta.length > 200 ? respuesta.slice(0, 200) + "..." : respuesta;
     } catch (error) {
-        console.error(`❌ Error con Google Gemini para usuario ${usuarioID}:`, error);
+        console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
     }
 }
+
+
 
 client.initialize();
