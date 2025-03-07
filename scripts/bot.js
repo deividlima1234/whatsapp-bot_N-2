@@ -105,4 +105,3 @@ async function obtenerRespuestaIA(chatId, nombreContacto) {
 }
 
 client.initialize();
-    
