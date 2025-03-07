@@ -1,37 +1,10 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const mysql = require('mysql2/promise');  // ✅ Se declara solo una vez
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); 
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args)); // Importación dinámica
 
-// Variables de entorno
-const API_URL = process.env.API_URL;
-const API_KEY = process.env.API_KEY;
+const API_URL = process.env.API_URL; 
+const API_KEY = process.env.API_KEY; 
 
-const dbConfig = {
-    host: "mysql.railway.internal", // Host interno de Railway
-    user: process.env.MYSQLUSER || "root",
-    password: process.env.MYSQLPASSWORD || "neZlNDDRSvpYpEFOOqBlIHmTkTOVeaNW",
-    database: process.env.MYSQLDATABASE || "railway",
-    port: process.env.MYSQLPORT || 3306
-};
-
-async function conectarDB() {
-    try {
-        const connection = await mysql.createConnection(dbConfig);
-        console.log("✅ Conexión a MySQL establecida.");
-        return connection;
-    } catch (error) {
-        console.error("❌ Error de conexión a MySQL:", error);
-        process.exit(1);
-    }
-}
-
-// Para probar la conexión
-conectarDB();
-
-
-
-// Verificar API
 if (!API_KEY || !API_URL) {
     console.error("❌ ERROR: API_KEY o API_URL no están configuradas en las variables de entorno.");
     process.exit(1);
@@ -40,32 +13,16 @@ if (!API_KEY || !API_URL) {
 console.log("🔑 API_KEY cargada:", API_KEY ? "Sí" : "No");
 console.log("🌍 API_URL cargada:", API_URL ? "Sí" : "No");  
 
-// Inicializar cliente de WhatsApp
 const client = new Client({
     puppeteer: {
-        headless: true, // Asegura que se ejecute sin interfaz gráfica
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
     },
     authStrategy: new LocalAuth()
 });
 
-
-// Obtener datos de la empresa desde MySQL
-async function obtenerDatosEmpresa() {
-    try {
-        const connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.execute("SELECT * FROM datos_empresa LIMIT 1");
-        await connection.end();
-
-        return rows.length ? rows[0] : null;
-    } catch (error) {
-        console.error("❌ Error al obtener datos de la empresa:", error);
-        return null;
-    }
-}
-
 client.on('qr', async qr => {
     console.log("📱 Escanea este código QR para iniciar sesión:");
+    
     try {
         console.log(await qrcode.toString(qr, { type: 'terminal', small: true }));
     } catch (error) {
@@ -79,7 +36,7 @@ client.on('ready', () => {
 
 client.on('message', async message => {
     console.log(`📩 Mensaje recibido: ${message.body}`);
-
+    
     let respuestaIA = await obtenerRespuestaIA(message.body, message.from); 
     
     console.log(`🤖 Respuesta de IA: ${respuestaIA}`);
@@ -87,22 +44,14 @@ client.on('message', async message => {
     message.reply(respuestaIA || "⚠️ No entendí tu mensaje, intenta de nuevo.");
 });
 
-const conversaciones = {}; // Historial de usuarios
-const MAX_HISTORIAL = 10; // Últimos 10 mensajes
+const conversaciones = {}; 
+const MAX_HISTORIAL = 10;
 
 async function obtenerRespuestaIA(mensaje, usuarioID) {
     if (!API_KEY) {
         console.error("❌ Error: API_KEY no configurada.");
         return "⚠️ No tengo acceso a la IA en este momento.";
     }
-
-    // Obtener información de la empresa
-    const datosEmpresa = await obtenerDatosEmpresa();
-    if (!datosEmpresa) {
-        return "⚠️ No se pudo recuperar la información de la empresa.";
-    }
-
-    const { nombre, horario_atencion, soporte_tecnico, whatsapp, billeteras_pago, cuenta_bancaria } = datosEmpresa;
 
     if (!conversaciones[usuarioID]) {
         conversaciones[usuarioID] = [];
@@ -121,16 +70,9 @@ async function obtenerRespuestaIA(mensaje, usuarioID) {
             body: JSON.stringify({
                 contents: [
                     { 
-                        role: "system",
+                        role: "user",  
                         parts: [{ 
-                            text: `Eres un asistente de atención al cliente de la empresa *${nombre}*. 
-                            - Horario de atención: ${horario_atencion}
-                            - Soporte técnico: ${soporte_tecnico}
-                            - WhatsApp: ${whatsapp}
-                            - Métodos de pago: ${billeteras_pago}
-                            - Cuenta bancaria: ${cuenta_bancaria}
-                            
-                            Atiende solo a este usuario con ID: ${usuarioID}.`
+                            text: `Eres un asistente de SERVICIO TÉCNICO MASCHERANITO. Atiende solo a este usuario con ID: ${usuarioID}. No mezcles información de otras conversaciones.` 
                         }]
                     },
                     ...conversaciones[usuarioID]
