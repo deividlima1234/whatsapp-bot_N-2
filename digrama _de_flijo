@@ -1,0 +1,27 @@
++-------------------+       +-------------------+       +-------------------+
+|  WhatsApp Web     |       |  Node.js Server   |       |  API de IA        |
+|  (whatsapp-web.js)|       |  (Bot Logic)      |       |  (Google Gemini)  |
++--------+----------+       +--------+----------+       +--------+----------+
+         |                           |                           |
+         | 1. Recibe mensaje         |                           |
+         +------------------------->|                           |
+         |                           |                           |
+         | 2. Procesa mensaje        |                           |
+         |   - Almacena en historial |                           |
+         |   - Verifica palabras clave                          |
+         |                           |                           |
+         | 3. Si no hay coincidencia |                           |
+         |    con palabras clave     |                           |
+         +------------------------->| 4. Llama a la API de IA    |
+         |                           +-------------------------->|
+         |                           |                           |
+         | 5. Recibe respuesta       | 6. Genera respuesta       |
+         |<--------------------------+<--------------------------+
+         |                           |                           |
+         | 7. Envía respuesta        |                           |
+         +------------------------->|                           |
+         |                           |                           |
++--------+----------+       +--------+----------+       +--------+----------+
+|  Cliente de       |       |  Base de Datos    |       |  Railway (Hosting)|
+|  WhatsApp         |       |  (historialChats) |       |  + GitHub         |
++-------------------+       +-------------------+       +-------------------+
