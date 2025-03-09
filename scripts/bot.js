@@ -38,8 +38,9 @@ client.on('message', async message => {
     if (!historialChats[message.from]) {
         historialChats[message.from] = [];
     }
-    historialChats[message.from].push(message.body);
-    if (historialChats[message.from].length > 10) {
+    historialChats[message.from].push({ role: "user", text: message.body });
+
+    if (historialChats[message.from].length > MAX_HISTORIAL) {
         historialChats[message.from].shift();
     }
 
@@ -52,7 +53,7 @@ client.on('message', async message => {
 const respuestas = {
     "1": "📋 *Información de WaCRM*\n💬 Gestiona clientes de forma eficiente.\n✅ *Filtros de Chat*: Encuentra conversaciones específicas fácilmente.\n✅ *Transmisión*: Envía mensajes masivos sin complicaciones.\n✅ *Bot con Respuesta Automática*: Responde rápido y sin esfuerzo.\n✅ *Guardia de Grupo*: Controla quién ingresa y qué mensajes se envían.\n🔗 [Ver más detalles](https://codecanyon.net/item/wasender-bulk-whatsapp-sender-group-sender-wahtsapp-bot/35762285)",
     "2": "📩 *Información de WaSender*\n📨 Perfecto para envíos masivos efectivos.\n✅ Envíos con fotos, videos y documentos.\n✅ Evita bloqueos con el calentador de cuentas.\n✅ Maneja múltiples cuentas de WhatsApp fácilmente.\n✅ Filtra contactos y crea mensajes personalizados.",
-    "3": "🤖 *ZapTech (SuperWasap)*\n🚀 Potencia tu WhatsApp con herramientas avanzadas.\n✅ ChatBot con IA para automatizar tus conversaciones.\n✅ Envía mensajes masivos con funciones avanzadas.\n✅ Administra múltiples cuentas con facilidad.",
+    "3": "🤖 *ZapTech (SuperWasap)*\n🚀 Potencia tu WhatsApp con herramientas avanzadas.\n✅ ChatBot con IA para automatizar tus conversaciones.\n✅ Envía mensajes masivos con funciones avanzadas.\n✅ Administra múltiples cuentas con facilidad.\n\n¿Te gustaría agendar un demo para verlo en acción? 😊",
     "hola": "👋 ¡Hola! Soy *Eddam*, tu asistente virtual en *Tecno Digital Perú EIRL*. 😊\n\n¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀\n\n🔹 *1. Información sobre WaCRM* (Gestión de clientes)\n🔹 *2. Información sobre WaSender* (Envíos masivos)\n🔹 *3. Información sobre ZapTech* (ChatBot avanzado)\n\nEscribe el *número* o una *palabra clave* para saber más. 📲"
 };
 
@@ -90,7 +91,7 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         const mensajesIA = [
             { role: "user", parts: [{ text: prompt }] },
             ...historial.map(msg => ({
-                role: msg.from === "bot" ? "assistant" : "user",
+                role: msg.role,
                 parts: [{ text: msg.text }]
             }))
         ];
@@ -104,18 +105,21 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: mensajesIA,
-                generationConfig: { maxOutputTokens: 500 }
+                generationConfig: { maxOutputTokens: MAX_TOKENS }
             })
         });
 
         if (!response.ok) {
+            if (response.status === 400) {
+                return "⚠️ Parece que hubo un problema con la conexión. Puede ser un problema temporal. Por favor, intenta nuevamente o contacta a soporte si el problema persiste.";
+            }
             throw new Error(`Error de API: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        return respuesta.length > 500 ? respuesta.substring(0, 500) + "..." : respuesta;
+        return respuesta.length > MAX_TOKENS ? respuesta.substring(0, MAX_TOKENS) + "..." : respuesta;
     } catch (error) {
         console.error("❌ Error con Google Gemini:", error);
         return "❌ Hubo un problema al conectar con el asistente. Por favor, intenta nuevamente en unos momentos.";
@@ -123,6 +127,5 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         delete enProceso[chatId];
     }
 }
-
 
 client.initialize();
