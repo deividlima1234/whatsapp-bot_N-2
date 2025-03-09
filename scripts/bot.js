@@ -70,7 +70,19 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
 
     try {
         const historial = historialChats[chatId] || [];
-        const prompt = `Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Responde de forma clara, directa y amigable. Saluda por el nombre del usuario si es posible.`;
+        const prompt = `
+            Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Tu objetivo es ayudar a los usuarios a conocer los servicios de la empresa y recomendarles la mejor opción según sus necesidades. Responde de forma clara, directa y amigable. Siempre saluda al usuario por su nombre si lo conoces.
+
+            Los servicios disponibles son:
+            1. WaCRM: Herramienta para gestionar clientes de forma eficiente.
+            2. WaSender: Herramienta para enviar mensajes masivos.
+            3. ZapTech: ChatBot avanzado con IA para automatizar conversaciones.
+
+            Si el usuario pregunta "¿cuál me recomiendas?", debes preguntar qué tipo de necesidad tiene (gestión de clientes, envíos masivos o automatización de chats) y recomendar el servicio más adecuado.
+
+            Si el mensaje no está relacionado con los servicios, responde:
+            "Hola, soy Eddam, tu asistente virtual. Estoy aquí para ayudarte a conocer nuestros servicios. ¿Te gustaría saber más sobre WaCRM, WaSender o ZapTech?"
+        `;
 
         const mensajesIA = [{ role: "user", parts: [{ text: prompt }] }]
             .concat(historial.map(msg => ({ role: "user", parts: [{ text: msg }] })));
@@ -88,21 +100,13 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
+        // Limitar la respuesta a 500 caracteres
         const resumirTexto = (texto, limite) => {
             if (texto.length <= limite) return texto;
-
-            const frases = texto.split('. ');
-            let resumen = '';
-
-            for (let frase of frases) {
-                if ((resumen + frase).length > limite) break;
-                resumen += frase + '. ';
-            }
-
-            return resumen.trim();
+            return texto.substring(0, limite) + "...";
         };
 
-        return `👋 ¡Hola *${nombreUsuario}*!\n${resumirTexto(respuesta, 500)}`;
+        return resumirTexto(respuesta, 500);
     } catch (error) {
         console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
