@@ -69,49 +69,42 @@ function obtenerInformacionEmpresa(mensaje) {
 }
 
 async function obtenerRespuestaIA(chatId, nombreUsuario) {
-    if (enProceso[chatId]) return;
+    if (enProceso[chatId]) return "⏳ Procesando tu solicitud, por favor espera...";
+
     enProceso[chatId] = true;
 
     try {
         const historial = historialChats[chatId] || [];
-
-        // Crear el prompt inicial
         const prompt = `
-            Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Tu objetivo es ayudar a los usuarios a conocer los servicios de la empresa y recomendarles la mejor opción según sus necesidades. Responde de forma clara, directa y amigable. Siempre saluda al usuario por su nombre si lo conoces.
+            Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Responde de forma clara, directa y amigable. 
+            Siempre saluda por el nombre del usuario si es posible. 
 
             Los servicios disponibles son:
-            1. WaCRM: Herramienta para gestionar clientes de forma eficiente.
-            2. WaSender: Herramienta para enviar mensajes masivos.
-            3. ZapTech: ChatBot avanzado con IA para automatizar conversaciones.
+            1. WaCRM: Gestión eficiente de clientes.
+            2. WaSender: Envíos masivos automatizados.
+            3. ZapTech: ChatBot avanzado.
 
-            Si el usuario pregunta "¿cuál me recomiendas?", debes preguntar qué tipo de necesidad tiene (gestión de clientes, envíos masivos o automatización de chats) y recomendar el servicio más adecuado.
-
-            Si el usuario pregunta sobre un servicio específico (por ejemplo, "hablame sobre WaCRM"), proporciona información detallada sobre ese servicio.
+            Si el usuario pregunta "¿qué me recomiendas?", consulta primero sus necesidades y luego sugiere la mejor opción.
         `;
 
-        // Crear el historial de mensajes para la IA
         const mensajesIA = [
-            { role: "user", parts: [{ text: prompt }] }, // Prompt inicial
+            { role: "user", parts: [{ text: prompt }] },
             ...historial.map(msg => ({
-                role: msg.from === "bot" ? "assistant" : "user", // Asignar roles
+                role: msg.from === "bot" ? "assistant" : "user",
                 parts: [{ text: msg.text }]
             }))
         ];
 
-        // Limitar el historial a los últimos 5 mensajes
         if (mensajesIA.length > 6) {
-            mensajesIA.splice(1, mensajesIA.length - 6); // Mantener el prompt + últimos 5 mensajes
+            mensajesIA.splice(1, mensajesIA.length - 6);
         }
 
-        // Llamar a la API de la IA
         const response = await fetch(`${API_URL}?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: mensajesIA,
-                generationConfig: {
-                    maxOutputTokens: 500 // Limitar la longitud de la respuesta
-                }
+                generationConfig: { maxOutputTokens: 500 }
             })
         });
 
@@ -122,19 +115,14 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        // Limitar la respuesta a 500 caracteres
-        const resumirTexto = (texto, limite) => {
-            if (texto.length <= limite) return texto;
-            return texto.substring(0, limite) + "...";
-        };
-
-        return resumirTexto(respuesta, 500);
+        return respuesta.length > 500 ? respuesta.substring(0, 500) + "..." : respuesta;
     } catch (error) {
         console.error("❌ Error con Google Gemini:", error);
-        return "❌ Error al conectar con la IA.";
+        return "❌ Hubo un problema al conectar con el asistente. Por favor, intenta nuevamente en unos momentos.";
     } finally {
         delete enProceso[chatId];
     }
 }
+
 
 client.initialize();
