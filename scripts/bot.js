@@ -70,6 +70,8 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
 
     try {
         const historial = historialChats[chatId] || [];
+
+        // Crear el prompt inicial
         const prompt = `
             Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Tu objetivo es ayudar a los usuarios a conocer los servicios de la empresa y recomendarles la mejor opción según sus necesidades. Responde de forma clara, directa y amigable. Siempre saluda al usuario por su nombre si lo conoces.
 
@@ -84,9 +86,21 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
             "Hola, soy Eddam, tu asistente virtual. Estoy aquí para ayudarte a conocer nuestros servicios. ¿Te gustaría saber más sobre WaCRM, WaSender o ZapTech?"
         `;
 
-        const mensajesIA = [{ role: "user", parts: [{ text: prompt }] }]
-            .concat(historial.map(msg => ({ role: "user", parts: [{ text: msg }] })));
+        // Crear el historial de mensajes para la IA
+        const mensajesIA = [
+            { role: "system", parts: [{ text: prompt }] }, // Instrucciones iniciales
+            ...historial.map(msg => ({
+                role: msg.from === "bot" ? "assistant" : "user", // Asignar roles
+                parts: [{ text: msg.text }]
+            }))
+        ];
 
+        // Limitar el historial a los últimos 5 mensajes
+        if (mensajesIA.length > 6) {
+            mensajesIA.splice(1, mensajesIA.length - 6); // Mantener el prompt + últimos 5 mensajes
+        }
+
+        // Llamar a la API de la IA
         const response = await fetch(`${API_URL}?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -114,5 +128,4 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         delete enProceso[chatId];
     }
 }
-
 client.initialize();
