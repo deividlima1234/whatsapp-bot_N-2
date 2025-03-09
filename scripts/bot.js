@@ -7,11 +7,12 @@ const API_URL = process.env.API_URL;
 const API_KEY = process.env.API_KEY;
 
 if (!API_KEY || !API_URL) {
-    console.error("❌ ERROR: API_KEY o API_URL no están configuradas.");
+    console.error("❌ ERROR: API_KEY o API_URL no están configuradas en el archivo .env.");
     process.exit(1);
 }
 
 const historialChats = {};
+const enProceso = {};
 
 const client = new Client({
     puppeteer: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
@@ -41,14 +42,14 @@ client.on('message', async message => {
     let respuesta = obtenerInformacionEmpresa(message.body.toLowerCase()) || await obtenerRespuestaIA(message.from, nombreUsuario);
 
     console.log(`🤖 Respuesta de Eddam: ${respuesta}`);
-    message.reply(respuesta || "⚠️ No entendí, dime de otra forma.");
+    message.reply(respuesta || "⚠️ No entendí, ¿puedes explicarlo de otra forma?");
 });
 
 const respuestas = {
-    "1": "📋 *Información de WaCRM*\nWaCRM es una herramienta diseñada para mejorar la gestión de tus clientes y automatizar la comunicación en WhatsApp.\n\n✅ *Filtros de Chat*\n✅ *Transmisión*\n✅ *Bot con Respuesta Automática*\n✅ *Guardia de Grupo*\n✅ *Horario*\n✅ *Recordatorio*\n✅ *Extractor de datos*\n✅ *Utilidades del grupo*\n✅ *Herramientas*\n\n🔗 [Ver más detalles](https://codecanyon.net/item/wasender-bulk-whatsapp-sender-group-sender-wahtsapp-bot/35762285)",
-    "2": "📩 *Información de WaSender*\n✅ Envíos con fotos, videos y documentos\n✅ Calentador de cuentas\n✅ Múltiples cuentas de WhatsApp\n✅ Filtro de Números y Anti-Bloqueos\n✅ Publicación en grupos masivos\n✅ Capturador de contactos de Google Maps",
-    "3": "🤖 *ZapTech (SuperWasap)*\n✅ ChatBot con IA\n✅ Envíos masivos avanzados\n✅ Multicuenta/multiagente\n✅ Calentador comunitario",
-    "hola": "👋 ¡Hola! Bienvenido a *Tecno Digital Perú EIRL*.\nSoy *Eddam*, tu asistente virtual. 😊\n\n¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀\n\n🔹 *1. Información sobre WaCRM*\n🔹 *2. Información sobre WaSender*\n🔹 *3. Información sobre ZapTech (SuperWasap)*\n\nEscribe el *número* o una *palabra clave* para saber más. 📲"
+    "1": "📋 *Información de WaCRM*\n💬 Gestiona clientes de forma eficiente.\n✅ *Filtros de Chat*: Encuentra conversaciones específicas fácilmente.\n✅ *Transmisión*: Envía mensajes masivos sin complicaciones.\n✅ *Bot con Respuesta Automática*: Responde rápido y sin esfuerzo.\n✅ *Guardia de Grupo*: Controla quién ingresa y qué mensajes se envían.\n🔗 [Ver más detalles](https://codecanyon.net/item/wasender-bulk-whatsapp-sender-group-sender-wahtsapp-bot/35762285)",
+    "2": "📩 *Información de WaSender*\n📨 Perfecto para envíos masivos efectivos.\n✅ Envíos con fotos, videos y documentos.\n✅ Evita bloqueos con el calentador de cuentas.\n✅ Maneja múltiples cuentas de WhatsApp fácilmente.\n✅ Filtra contactos y crea mensajes personalizados.",
+    "3": "🤖 *ZapTech (SuperWasap)*\n🚀 Potencia tu WhatsApp con herramientas avanzadas.\n✅ ChatBot con IA para automatizar tus conversaciones.\n✅ Envía mensajes masivos con funciones avanzadas.\n✅ Administra múltiples cuentas con facilidad.",
+    "hola": "👋 ¡Hola! Soy *Eddam*, tu asistente virtual en *Tecno Digital Perú EIRL*. 😊\n\n¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀\n\n🔹 *1. Información sobre WaCRM* (Gestión de clientes)\n🔹 *2. Información sobre WaSender* (Envíos masivos)\n🔹 *3. Información sobre ZapTech* (ChatBot avanzado)\n\nEscribe el *número* o una *palabra clave* para saber más. 📲"
 };
 
 function obtenerInformacionEmpresa(mensaje) {
@@ -63,15 +64,13 @@ function obtenerInformacionEmpresa(mensaje) {
     return null;
 }
 
-let enProceso = {}; // Controla que no se dupliquen las respuestas
-
 async function obtenerRespuestaIA(chatId, nombreUsuario) {
-    if (enProceso[chatId]) return; // Evita duplicados
+    if (enProceso[chatId]) return;
     enProceso[chatId] = true;
 
     try {
         const historial = historialChats[chatId] || [];
-        const prompt = `Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Responde de manera profesional y amigable. Saluda por el nombre del usuario si es posible.`;
+        const prompt = `Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Responde de forma clara, directa y amigable. Saluda por el nombre del usuario si es posible.`;
 
         const mensajesIA = [{ role: "user", parts: [{ text: prompt }] }]
             .concat(historial.map(msg => ({ role: "user", parts: [{ text: msg }] })));
@@ -108,8 +107,8 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
     } finally {
-        delete enProceso[chatId]; // Restablece la bandera para permitir nuevas respuestas
+        delete enProceso[chatId];
     }
-}   
+}
 
 client.initialize();
