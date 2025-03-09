@@ -86,24 +86,21 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
 
             Si el usuario pregunta "¿cuál me recomiendas?", debes preguntar qué tipo de necesidad tiene (gestión de clientes, envíos masivos o automatización de chats) y recomendar el servicio más adecuado.
 
-            Si el mensaje no está relacionado con los servicios, responde:
-            "Hola, soy Eddam, tu asistente virtual. Estoy aquí para ayudarte a conocer nuestros servicios. ¿Te gustaría saber más sobre WaCRM, WaSender o ZapTech?"
+            Si el usuario pregunta sobre un servicio específico (por ejemplo, "hablame sobre WaCRM"), proporciona información detallada sobre ese servicio.
         `;
 
         // Crear el historial de mensajes para la IA
         const mensajesIA = [
             { role: "user", parts: [{ text: prompt }] }, // Prompt inicial
-            ...historial
-                .filter(msg => msg.text && msg.text.trim() !== "") // Filtrar mensajes vacíos
-                .map(msg => ({
-                    role: msg.from === "bot" ? "assistant" : "user",
-                    parts: [{ text: msg.text }]
-                }))
+            ...historial.map(msg => ({
+                role: msg.from === "bot" ? "assistant" : "user", // Asignar roles
+                parts: [{ text: msg.text }]
+            }))
         ];
 
         // Limitar el historial a los últimos 5 mensajes
-        if (mensajesIA.length > MAX_HISTORIAL + 1) {
-            mensajesIA.splice(1, mensajesIA.length - (MAX_HISTORIAL + 1));
+        if (mensajesIA.length > 6) {
+            mensajesIA.splice(1, mensajesIA.length - 6); // Mantener el prompt + últimos 5 mensajes
         }
 
         // Llamar a la API de la IA
@@ -113,7 +110,7 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
             body: JSON.stringify({
                 contents: mensajesIA,
                 generationConfig: {
-                    maxOutputTokens: MAX_TOKENS
+                    maxOutputTokens: 500 // Limitar la longitud de la respuesta
                 }
             })
         });
@@ -125,20 +122,15 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        // Limitar la respuesta a 500 caracteres sin cortar palabras
+        // Limitar la respuesta a 500 caracteres
         const resumirTexto = (texto, limite) => {
             if (texto.length <= limite) return texto;
-            const ultimoEspacio = texto.lastIndexOf(" ", limite);
-            return texto.substring(0, ultimoEspacio) + "...";
+            return texto.substring(0, limite) + "...";
         };
 
-        return resumirTexto(respuesta, MAX_TOKENS);
+        return resumirTexto(respuesta, 500);
     } catch (error) {
-        console.error("❌ Error con Google Gemini:", {
-            error: error.message,
-            requestBody: JSON.stringify({ contents: mensajesIA, generationConfig: { maxOutputTokens: MAX_TOKENS } }),
-            response: response ? await response.text() : "No hubo respuesta"
-        });
+        console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
     } finally {
         delete enProceso[chatId];
