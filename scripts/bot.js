@@ -63,7 +63,12 @@ function obtenerInformacionEmpresa(mensaje) {
     return null;
 }
 
+let enProceso = {}; // Controla que no se dupliquen las respuestas
+
 async function obtenerRespuestaIA(chatId, nombreUsuario) {
+    if (enProceso[chatId]) return; // Evita duplicados
+    enProceso[chatId] = true;
+
     try {
         const historial = historialChats[chatId] || [];
         const prompt = `Eres Eddam, el asistente virtual de Tecno Digital Perú EIRL. Responde de manera profesional y amigable. Saluda por el nombre del usuario si es posible.`;
@@ -84,11 +89,10 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        // Función para resumir el texto de forma clara
         const resumirTexto = (texto, limite) => {
             if (texto.length <= limite) return texto;
 
-            const frases = texto.split('. '); // Dividimos por frases completas
+            const frases = texto.split('. ');
             let resumen = '';
 
             for (let frase of frases) {
@@ -96,15 +100,16 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
                 resumen += frase + '. ';
             }
 
-            return resumen.trim(); // Elimina espacios extra
+            return resumen.trim();
         };
 
         return `👋 ¡Hola *${nombreUsuario}*!\n${resumirTexto(respuesta, 500)}`;
     } catch (error) {
         console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
+    } finally {
+        delete enProceso[chatId]; // Restablece la bandera para permitir nuevas respuestas
     }
-}
-
+}   
 
 client.initialize();
