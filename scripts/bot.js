@@ -83,11 +83,28 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
 
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
-        return `👋 ¡Hola *${nombreUsuario}*!\n` + (respuesta.length > 200 ? respuesta.slice(0, 200) + "..." : respuesta);
+
+        // Función para resumir el texto de forma clara
+        const resumirTexto = (texto, limite) => {
+            if (texto.length <= limite) return texto;
+
+            const frases = texto.split('. '); // Dividimos por frases completas
+            let resumen = '';
+
+            for (let frase of frases) {
+                if ((resumen + frase).length > limite) break;
+                resumen += frase + '. ';
+            }
+
+            return resumen.trim(); // Elimina espacios extra
+        };
+
+        return `👋 ¡Hola *${nombreUsuario}*!\n${resumirTexto(respuesta, 500)}`;
     } catch (error) {
         console.error("❌ Error con Google Gemini:", error);
         return "❌ Error al conectar con la IA.";
     }
 }
+
 
 client.initialize();
