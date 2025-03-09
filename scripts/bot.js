@@ -11,6 +11,10 @@ if (!API_KEY || !API_URL) {
     process.exit(1);
 }
 
+// Constantes para configuración
+const MAX_TOKENS = 500;
+const MAX_HISTORIAL = 5;
+
 const historialChats = {};
 const enProceso = {};
 
@@ -88,23 +92,30 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
 
         // Crear el historial de mensajes para la IA
         const mensajesIA = [
-            { role: "system", parts: [{ text: prompt }] }, // Instrucciones iniciales
-            ...historial.map(msg => ({
-                role: msg.from === "bot" ? "assistant" : "user", // Asignar roles
-                parts: [{ text: msg.text }]
-            }))
+            { role: "user", parts: [{ text: prompt }] }, // Prompt inicial
+            ...historial
+                .filter(msg => msg.text && msg.text.trim() !== "") // Filtrar mensajes vacíos
+                .map(msg => ({
+                    role: msg.from === "bot" ? "assistant" : "user",
+                    parts: [{ text: msg.text }]
+                }))
         ];
 
         // Limitar el historial a los últimos 5 mensajes
-        if (mensajesIA.length > 6) {
-            mensajesIA.splice(1, mensajesIA.length - 6); // Mantener el prompt + últimos 5 mensajes
+        if (mensajesIA.length > MAX_HISTORIAL + 1) {
+            mensajesIA.splice(1, mensajesIA.length - (MAX_HISTORIAL + 1));
         }
 
         // Llamar a la API de la IA
         const response = await fetch(`${API_URL}?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: mensajesIA })
+            body: JSON.stringify({
+                contents: mensajesIA,
+                generationConfig: {
+                    maxOutputTokens: MAX_TOKENS
+                }
+            })
         });
 
         if (!response.ok) {
@@ -114,18 +125,24 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        // Limitar la respuesta a 500 caracteres
+        // Limitar la respuesta a 500 caracteres sin cortar palabras
         const resumirTexto = (texto, limite) => {
             if (texto.length <= limite) return texto;
-            return texto.substring(0, limite) + "...";
+            const ultimoEspacio = texto.lastIndexOf(" ", limite);
+            return texto.substring(0, ultimoEspacio) + "...";
         };
 
-        return resumirTexto(respuesta, 500);
+        return resumirTexto(respuesta, MAX_TOKENS);
     } catch (error) {
-        console.error("❌ Error con Google Gemini:", error);
+        console.error("❌ Error con Google Gemini:", {
+            error: error.message,
+            requestBody: JSON.stringify({ contents: mensajesIA, generationConfig: { maxOutputTokens: MAX_TOKENS } }),
+            response: response ? await response.text() : "No hubo respuesta"
+        });
         return "❌ Error al conectar con la IA.";
     } finally {
         delete enProceso[chatId];
     }
 }
+
 client.initialize();
