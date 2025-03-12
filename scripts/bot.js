@@ -46,6 +46,9 @@ client.on('message', async message => {
 
     let respuesta = obtenerInformacionEmpresa(message.body.toLowerCase()) || await obtenerRespuestaIA(message.from, nombreUsuario);
 
+    // Add signature to the response
+    respuesta = `${respuesta}\n\nDesarrollado por:\nEddam H.l`;
+
     console.log(`🤖 Respuesta de Eddam: ${respuesta}`);
     message.reply(respuesta || "⚠️ No entendí, ¿puedes explicarlo de otra forma?");
 });
