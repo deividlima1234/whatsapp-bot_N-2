@@ -54,15 +54,34 @@ client.on('message', async message => {
 });
 
 const respuestas = {
-    "1": "📋 *Información de WaCRM*\n💬 Gestiona clientes de forma eficiente.\n✅ *Filtros de Chat*: Encuentra conversaciones específicas fácilmente.\n✅ *Transmisión*: Envía mensajes masivos sin complicaciones.\n✅ *Bot con Respuesta Automática*: Responde rápido y sin esfuerzo.\n✅ *Guardia de Grupo*: Controla quién ingresa y qué mensajes se envían.\n🔗 [Ver más detalles](https://codecanyon.net/item/wasender-bulk-whatsapp-sender-group-sender-wahtsapp-bot/35762285)",
-    "2": "📩 *Información de WaSender*\n📨 Perfecto para envíos masivos efectivos.\n✅ Envíos con fotos, videos y documentos.\n✅ Evita bloqueos con el calentador de cuentas.\n✅ Maneja múltiples cuentas de WhatsApp fácilmente.\n✅ Filtra contactos y crea mensajes personalizados.",
-    "3": "🤖 *ZapTech (SuperWasap)*\n🚀 Potencia tu WhatsApp con herramientas avanzadas.\n✅ ChatBot con IA para automatizar tus conversaciones.\n✅ Envía mensajes masivos con funciones avanzadas.\n✅ Administra múltiples cuentas con facilidad.\n\n¿Te gustaría agendar un demo para verlo en acción? 😊",
+    "1": "📋 *Información de WaCRM*\n💬 Gestiona clientes de forma eficiente.\n✅ *Filtros de Chat*: Encuentra conversaciones específicas fácilmente.\n✅ *Transmisión*: Envía mensajes masivos sin complicaciones.\n✅ *Bot con Respuesta Automática*: Responde rápido y sin esfuerzo.\n✅ *Guardia de Grupo*: Controla quién ingresa y qué mensajes se envían.\n\n🤔 ¿Te gustaría implementar WaCRM en tu negocio? ¿O prefieres conocer más sobre nuestros otros servicios?\n\n*Responde con:*\n- 'Quiero implementar WaCRM'\n- 'Más información de otros servicios'",
+    
+    "2": "📩 *Información de WaSender*\n📨 La solución perfecta para marketing masivo:\n✅ Envíos personalizados con fotos, videos y documentos\n✅ Sistema anti-bloqueo integrado\n✅ Gestión de múltiples cuentas de WhatsApp\n✅ Filtros inteligentes de contactos\n✅ Mensajes personalizados por cliente\n\n💡 ¿Te gustaría ver una demostración de WaSender en acción? ¿O tienes dudas sobre alguna función específica?\n\n*Responde con:*\n- 'Quiero una demo de WaSender'\n- 'Tengo dudas sobre WaSender'",
+    
+    "3": "🤖 *ZapTech (SuperWasap)*\n🚀 La herramienta más completa para WhatsApp:\n✅ ChatBot con IA para atención 24/7\n✅ Sistema de envíos masivos avanzado\n✅ Gestión multi-cuenta profesional\n✅ Automatización completa de respuestas\n\n💼 ¿Te gustaría ver cómo ZapTech puede transformar tu negocio? ¡Agendemos una demostración personalizada!\n\n*Responde con:*\n- 'Agendar demo de ZapTech'\n- 'Más información de ZapTech'",
+    
     "hola": "👋 ¡Hola! Soy *Eddam*, tu asistente virtual en *Tecno Digital Perú EIRL*. 😊\n\n¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀\n\n🔹 *1. Información sobre WaCRM* (Gestión de clientes)\n🔹 *2. Información sobre WaSender* (Envíos masivos)\n🔹 *3. Información sobre ZapTech* (ChatBot avanzado)\n\nEscribe el *número* o una *palabra clave* para saber más. 📲"
 };
 
 function obtenerInformacionEmpresa(mensaje) {
-    const correcciones = { "wacmr": "1", "wasenr": "2", "zaptch": "3" };
-    mensaje = mensaje.replace(/wacmr|wasenr|zaptch/gi, match => correcciones[match.toLowerCase()] || match);
+    const correcciones = { 
+        "wacmr": "1", 
+        "wasenr": "2", 
+        "zaptch": "3",
+        "wasender": "2",
+        "wacrm": "1",
+        "zaptech": "3"
+    };
+    
+    mensaje = mensaje.toLowerCase();
+    
+    // Verificar palabras clave específicas
+    if (mensaje.includes("demo") || mensaje.includes("implementar")) {
+        return "🎯 ¡Excelente elección! Para coordinar una demostración personalizada, por favor proporciona:\n\n1️⃣ Nombre de tu empresa\n2️⃣ Rubro del negocio\n3️⃣ Horario preferido para la demo\n\nUn asesor se pondrá en contacto contigo pronto. 🤝";
+    }
+
+    // Procesamiento normal de respuestas
+    mensaje = mensaje.replace(/wacmr|wasenr|zaptch|wasender|wacrm|zaptech/gi, match => correcciones[match.toLowerCase()] || match);
 
     for (const [clave, respuesta] of Object.entries(respuestas)) {
         if (mensaje.includes(clave)) {
