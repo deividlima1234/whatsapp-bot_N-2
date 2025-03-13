@@ -12,7 +12,7 @@ if (!API_KEY || !API_URL) {
 }
 
 // Constantes para configuración
-const MAX_TOKENS = 500;
+const MAX_TOKENS = 1000;
 const MAX_HISTORIAL = 5;
 
 const historialChats = {};
@@ -183,6 +183,7 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
 
             Si el usuario pregunta "¿qué me recomiendas?", consulta primero sus necesidades y luego sugiere la mejor opción.
         `;
+        
 
         const mensajesIA = [
             { role: "user", parts: [{ text: prompt }] },
@@ -215,7 +216,7 @@ async function obtenerRespuestaIA(chatId, nombreUsuario) {
         const data = await response.json();
         let respuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No recibí respuesta.";
 
-        return respuesta.length > MAX_TOKENS ? respuesta.substring(0, MAX_TOKENS) + "..." : respuesta;
+        return respuesta;
     } catch (error) {
         console.error("❌ Error con Google Gemini:", error);
         return "❌ Hubo un problema al conectar con el asistente. Por favor, intenta nuevamente en unos momentos.";
