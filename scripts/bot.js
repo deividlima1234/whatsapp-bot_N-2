@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
+const fs = require('fs');
+const path = require('path');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const API_URL = process.env.API_URL;
@@ -26,9 +28,21 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
+// Crear la carpeta 'imagenesQR' si no existe
+const qrFolderPath = path.join(__dirname, 'imagenesQR');
+if (!fs.existsSync(qrFolderPath)) {
+    fs.mkdirSync(qrFolderPath);
+}
+
 client.on('qr', async qr => {
     console.log("📱 Escanea este código QR para iniciar sesión:");
     console.log(await qrcode.toString(qr, { type: 'terminal', small: true }));
+
+    // Guardar el QR como imagen en la carpeta 'imagenesQR'
+    const qrPath = path.join(qrFolderPath, 'qr_code.png');
+    await qrcode.toFile(qrPath, qr);
+
+    console.log(`🖼️ QR guardado en: ${qrPath}`);
 });
 
 client.on('ready', () => console.log('✅ Bot de WhatsApp está listo!'));
