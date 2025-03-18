@@ -1,6 +1,9 @@
 require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const API_URL = process.env.API_URL;
@@ -10,6 +13,13 @@ if (!API_KEY || !API_URL) {
     console.error("❌ ERROR: API_KEY o API_URL no están configuradas en el archivo .env.");
     process.exit(1);
 }
+
+// Configuración del servidor Express
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.use(express.static(__dirname + '/../'));  // Sirve todos los archivos desde la raíz del proyecto
 
 // Constantes para configuración
 const MAX_TOKENS = 1000;
@@ -26,12 +36,34 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
+// Evento para enviar el QR al cliente web
 client.on('qr', async qr => {
     console.log("📱 Escanea este código QR para iniciar sesión:");
     console.log(await qrcode.toString(qr, { type: 'terminal', small: true }));
+
+    // Emitir el QR mediante Socket.IO
+    io.emit('qr', qr);
 });
 
-client.on('ready', () => console.log('✅ Bot de WhatsApp está listo!'));
+client.on('ready', () => {
+    console.log('✅ Bot de WhatsApp está listo!');
+    io.emit('status', '✅ Bot de WhatsApp está listo!');
+});
+
+// Conexión del cliente de Socket.IO
+io.on('connection', (socket) => {
+    console.log('🔌 Cliente web conectado al socket');
+});
+
+// Iniciar el cliente de WhatsApp
+client.initialize();
+
+// Escuchar el puerto en Railway
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`🚀 Servidor en ejecución en el puerto ${PORT}`);
+});
+
 
 client.on('message', async message => {
     console.log(`📩 Mensaje recibido de ${message.from}: ${message.body}`);

@@ -1,0 +1,50 @@
+body {
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f2f5;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 350px;
+}
+
+header h1 {
+    color: #25d366;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #128C7E;
+}
+
+.instructions {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.qr-container img {
+    width: 100%;
+    border: 5px solid #25d366;
+    border-radius: 12px;
+}
+
+#status {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #25d366;
+}

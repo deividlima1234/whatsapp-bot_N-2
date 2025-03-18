@@ -1,0 +1,85 @@
+12/11/del 2025
+pruebas en el bot en el habito de interacción con clientes 
+
+deficiencias:
+- al iniciar el chat emjemlo: 
+
+usuario: hola buenas noches me llamo Eloy 
+respuesta bot:
+ 👋 ¡Hola! Soy Eddam, tu asistente virtual en Tecno Digital Perú EIRL. 😊
+
+¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀
+
+🔹 1. Información sobre WaCRM (Gestión de clientes)
+🔹 2. Información sobre WaSender (Envíos masivos)
+🔹 3. Información sobre ZapTech (ChatBot avanzado)
+
+Escribe el número o una palabra clave para saber más. 📲
+
+Desarrollado por:
+Eddam H.
+- el bot esta genera mucha redundancia en en la inteaccion repite en cada mensaje(hola soy ..)
+
+
+
+
+
+
+----------------------------------------------
+próximos pasos 
+realizar mejoras en los siguientes puntos:
+
+iniciar el cahat 
+- identificar el usuario si el mensaje viene con su nombre y responder co su nombre en el siguiente mensaje 
+- si el primer mensaje del usuario no viene con su nombre la respuesta del bot será (pregunatr por su nombre)
+
+por ejemplo:
+
+primer mensaje del usuario: hola buenas noches me llam Eloy
+
+si el primer mensaje del usuario viene con su nombre la respuesta del bot será
+ 
+respuesta bot:
+ 👋 ¡Hola!  Eloy buenas noches, soy Eddam, tu asistente virtual en Tecno Digital Perú EIRL. 😊
+
+¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀
+
+🔹 1. Información sobre WaCRM (Gestión de clientes)
+🔹 2. Información sobre WaSender (Envíos masivos)
+🔹 3. Información sobre ZapTech (ChatBot avanzado)
+
+Escribe el número o una palabra clave para saber más. 📲
+
+y si el primer mensaje del usuario viene sin su nombre ejemplo:
+primer mensaje del usuario: hola buenas noches 
+
+el primer respuesta del bot será o debria intentar saber el nombre del usuario
+respuesta del bot: hola buenas noches para poder iniciar la conversación me gustaria que me brinde su nombre o de su empresa
+
+si en caso que el usuario brinde su nombre en el segundo el bot recién en el tercer mensaje estaría ofreciendo los servicios incluyendo su nombre empjemplo
+
+segundo mensaje de usuario: me llamo Eloy
+
+tercera respuesta bot:
+ 👋 ¡Hola!  Eloy buenas noches, soy Eddam, tu asistente virtual en Tecno Digital Perú EIRL. 😊
+
+¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀
+
+🔹 1. Información sobre WaCRM (Gestión de clientes)
+🔹 2. Información sobre WaSender (Envíos masivos)
+🔹 3. Información sobre ZapTech (ChatBot avanzado)
+
+Escribe el número o una palabra clave para saber más. 📲
+
+
+
+
+//--------------------------------------------------------------------
+fecha: 13/03/2025
+cambios realizados:
+- ahora el bot pregunta por su nombre del en el primer mesaje - si no dice su nombre
+- si en el primer mensaje el usuario envia un mensaje incluyeno su nombre el bot le le ofresera los servicios icluyendo su nombre en el mensaje con un saludo amigable
+
+
+/------------------proximos pasos
+•	Autenticación Persistente: Se implementó el almacenamiento de la sesión en un archivo local para evitar la autenticación repetida.
