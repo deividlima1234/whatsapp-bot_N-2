@@ -151,6 +151,21 @@ const respuestas = {
     "hola": "👋 ¡Hola! Soy *Eddam*, tu asistente virtual en *Tecno Digital Perú EIRL*. 😊\n\n¿Quieres optimizar tus ventas o automatizar tus mensajes? Estoy aquí para ayudarte. 🚀\n\n🔹 *1. Información sobre WaCRM* (Gestión de clientes)\n🔹 *2. Información sobre WaSender* (Envíos masivos)\n🔹 *3. Información sobre ZapTech* (ChatBot avanzado)\n\nEscribe el *número* o una *palabra clave* para saber más. 📲"
 };
 
+const informacionEmpresa = `
+🏢 **Datos Generales de la Empresa**
+🕒 **Horario de Atención:**
+- Lunes a Viernes: 08:30 a 18:00 pm
+- Sábados y Domingos: 09:30 a 13:00 pm
+
+📞 **Soporte Técnico Premium por Whatsapp:**
+- Lunes a Sábado: 08:00 a 20:00 pm
+- Whatsapp: +51941180300
+
+💳 **Billeteras de pago:**
+- *YAPE-PLIN*: Cel: +51941180300 - +51985300000
+- *Cuenta Corriente BBVA SOLES*: N° 011764 000100011187 80 a nombre de Tecno Digital Peru EIRL.
+`;
+
 function obtenerInformacionEmpresa(mensaje) {
     const correcciones = { 
         "wacmr": "1", 
@@ -158,7 +173,11 @@ function obtenerInformacionEmpresa(mensaje) {
         "zaptch": "3",
         "wasender": "2",
         "wacrm": "1",
-        "zaptech": "3"
+        "zaptech": "3",
+        "horario": "horario",
+        "soporte": "soporte",
+        "informacion": "informacion",
+        "datos de la empresa": "informacion"
     };
     
     mensaje = mensaje.toLowerCase();
@@ -166,6 +185,11 @@ function obtenerInformacionEmpresa(mensaje) {
     // Verificar palabras clave específicas
     if (mensaje.includes("demo") || mensaje.includes("implementar")) {
         return "🎯 ¡Excelente elección! Para coordinar una demostración personalizada, por favor proporciona:\n\n1️⃣ Nombre de tu empresa\n2️⃣ Rubro del negocio\n3️⃣ Horario preferido para la demo\n\nUn asesor se pondrá en contacto contigo pronto. 🤝";
+    }
+
+    // Responder con la información de la empresa si se menciona
+    if (mensaje.includes("horario") || mensaje.includes("soporte") || mensaje.includes("informacion") || mensaje.includes("datos de la empresa")) {
+        return informacionEmpresa;
     }
 
     // Procesamiento normal de respuestas
@@ -178,6 +202,7 @@ function obtenerInformacionEmpresa(mensaje) {
     }
     return null;
 }
+
 
 async function obtenerRespuestaIA(chatId, nombreUsuario) {
     if (enProceso[chatId]) return "⏳ Procesando tu solicitud, por favor espera...";
